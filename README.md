@@ -41,18 +41,36 @@ Here is a final example with everything together.
 ##### Example.cpp
 ```
 #include <iostream>
+#include <JPL.h>
 
-void A()
+using namespace JPL;
+
+void Calc()
 {
-    PROFILE_FUNC();
-    std::cout << "Hello" << std::endl;
+	PROFILE_FUNC();
+
+	int sum = 0;
+
+	for (int i = 0; i < 100000; ++i)
+	{
+		int s = i % 3;
+
+		sum += s;
+	}
+
+	std::cout << sum << std::endl;
 }
 
 int main()
 {
-    SESSION_START("Testing");
-    A();
-    SESSION_END();
-    return 0;
+	START_SESSION("Profiling Calculation");
+	Calc();
+	END_SESSION();
+	return 0;
 }
 ```
+
+This then generates a ```results.json``` file by default.
+
+The output in the browser is then:
+
