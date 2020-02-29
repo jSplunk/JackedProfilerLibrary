@@ -74,4 +74,3 @@ This then generates a ```results.json``` file by default.
 
 The output in the browser is then:
 ![Profiler in Chrome](/screenshots/Example.PNG)
-Format: ![Alt Text](url)
