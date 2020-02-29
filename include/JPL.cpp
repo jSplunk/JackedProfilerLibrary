@@ -5,41 +5,52 @@
 
 namespace JPL
 {
+	//Creates a new instance of the class (Singleton)
 	Tracer* Tracer::instance = new Tracer();
 
 	Tracer::~Tracer()
 	{
+		endSession();
 	}
 
+	//Starts the session for tracing the timers
 	void Tracer::beginSession(const char* _name, const char* _filePath)
 	{
+		if (m_isInSession)
+			endSession();
 		m_outputStream.open(_filePath);
+		m_isInSession = true;
 		header();
-		Name = _name;
+		m_sessionName = _name;
 	}
 
+	//Ends the current session
 	void Tracer::endSession()
 	{
+		if (!m_isInSession) return;
+		m_isInSession = false;
 		footer();
 		m_outputStream.close();
 		m_count = 0;
 	}
 
+	//Creates the header for the json file
 	void Tracer::header()
 	{
 		m_outputStream << "{\"otherData\": {}, \"traceEvents\":[";
-		m_outputStream.flush();
 	}
 
+	//Creates the footer for the json file
 	void Tracer::footer()
 	{
 		m_outputStream << "]}";
-
-		m_outputStream.flush();
 	}
 
+	//Sets the profile data in json file
 	void Tracer::profile(const ProfileResult& result)
 	{
+		std::lock_guard<std::mutex> lock(m_lock);
+
 		if (m_count++ > 0)
 		{
 			m_outputStream << ",";
@@ -53,16 +64,8 @@ namespace JPL
 		m_outputStream << "\"name\":\"" << name << "\",";
 		m_outputStream << "\"ph\":\"X\",";
 		m_outputStream << "\"pid\":\"0\",";
-		m_outputStream << "\"tid\":\"0\",";
+		m_outputStream << "\"tid\":\""<< result.ThreadID <<"\",";
 		m_outputStream << "\"ts\":" << result.Start << "}";
-
-		m_outputStream.flush();
-	}
-
-	Timer::Timer(const char * _name)
-	{
-		m_name = _name;
-		m_timeStartPoint = std::chrono::high_resolution_clock::now();
 	}
 
 	Timer::~Timer()
@@ -71,14 +74,17 @@ namespace JPL
 			Stop();
 	}
 
+	//Calculates the time between when the Timer object was created and when the function was called
 	void Timer::Stop()
 	{
 		auto endTime = std::chrono::high_resolution_clock::now();
 
-		long long start = std::chrono::time_point_cast<std::chrono::microseconds>(m_timeStartPoint).time_since_epoch().count();
-		long long end = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
+		m_result.Start = std::chrono::time_point_cast<std::chrono::microseconds>(m_timeStartPoint).time_since_epoch().count();
+		m_result.End = std::chrono::time_point_cast<std::chrono::microseconds>(endTime).time_since_epoch().count();
 
-		Tracer::instance->profile(ProfileResult{ m_name, start, end });
+		m_result.ThreadID = std::hash<std::thread::id>{}(std::this_thread::get_id());
+
+		Tracer::instance->profile(m_result);
 
 		m_isStopped = true;
 
