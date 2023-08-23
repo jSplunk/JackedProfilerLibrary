@@ -8,7 +8,7 @@ The library generates a .json file, which then can be used in ```chrome://tracin
 To use the functionallity, you need to specify a ```SESSION_START(name)``` and a ```SESSION_END()``` for what the range of the profiler should be.
 
 ##### Example.cpp
-```
+```cpp
 #include <iostream>
 
 void A()
@@ -27,7 +27,7 @@ int main()
 
 Now in the session there also needs to be a profile. This can be used with the macro ```PROFILE_FUNC```, which will time the block of code it is placed inside.
 
-```
+```cpp
 {
     PROFILE_FUNC();
 }
@@ -39,7 +39,7 @@ This marks this block to be evaluated by the session. The session will always ne
 Here is a final example with everything together.
 
 ##### Example.cpp
-```
+```cpp
 #include <iostream>
 #include <JPL.h>
 
